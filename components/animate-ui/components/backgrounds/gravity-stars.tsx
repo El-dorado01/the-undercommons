@@ -116,26 +116,33 @@ function GravityStarsBackground({
     }
   }, [initStars, redistributeStars]);
 
-  const handlePointerMove = React.useCallback(
-    (e: React.MouseEvent | React.TouchEvent) => {
-      const canvas = canvasRef.current;
-      if (!canvas) return;
-      const rect = canvas.getBoundingClientRect();
-      let clientX = 0;
-      let clientY = 0;
-      if ('touches' in e) {
-        const t = e.touches[0];
-        if (!t) return;
-        clientX = t.clientX;
-        clientY = t.clientY;
-      } else {
-        clientX = e.clientX;
-        clientY = e.clientY;
-      }
-      mouseRef.current = { x: clientX - rect.left, y: clientY - rect.top };
-    },
-    [],
-  );
+  const handlePointerMove = React.useCallback((e: MouseEvent | TouchEvent) => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const rect = canvas.getBoundingClientRect();
+    let clientX = 0;
+    let clientY = 0;
+    if (window.TouchEvent && e instanceof TouchEvent) {
+      const t = e.touches[0];
+      if (!t) return;
+      clientX = t.clientX;
+      clientY = t.clientY;
+    } else if (e instanceof MouseEvent) {
+      clientX = e.clientX;
+      clientY = e.clientY;
+    }
+    mouseRef.current = { x: clientX - rect.left, y: clientY - rect.top };
+  }, []);
+
+  React.useEffect(() => {
+    const onMove = (e: MouseEvent | TouchEvent) => handlePointerMove(e);
+    window.addEventListener('mousemove', onMove);
+    window.addEventListener('touchmove', onMove);
+    return () => {
+      window.removeEventListener('mousemove', onMove);
+      window.removeEventListener('touchmove', onMove);
+    };
+  }, [handlePointerMove]);
 
   const updateStars = React.useCallback(() => {
     const w = canvasSize.width;
@@ -346,13 +353,14 @@ function GravityStarsBackground({
   return (
     <div
       ref={containerRef}
-      data-slot="gravity-stars-background"
+      data-slot='gravity-stars-background'
       className={cn('relative size-full overflow-hidden', className)}
-      onMouseMove={(e) => handlePointerMove(e)}
-      onTouchMove={(e) => handlePointerMove(e)}
       {...props}
     >
-      <canvas ref={canvasRef} className="block w-full h-full" />
+      <canvas
+        ref={canvasRef}
+        className='block w-full h-full'
+      />
     </div>
   );
 }

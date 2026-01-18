@@ -1,13 +1,29 @@
+// components/Hero.tsx
+'use client';
+
 import React from 'react';
 import { Button } from './ui/button';
 import { ArrowRight, Plus, Search } from 'lucide-react';
 import { Separator } from './ui/separator';
 import Link from 'next/link';
+import { useAuth } from '@/components/auth-context';
+import { useRouter } from 'next/navigation';
 
 const Hero = () => {
+  const { isAuthenticated } = useAuth();
+  const router = useRouter();
+
+  const handlePostListing = () => {
+    if (isAuthenticated) {
+      router.push('/listings/new');
+    } else {
+      router.push('/login');
+    }
+  };
+
   return (
     <section className='flex flex-col pt-24'>
-      <div className='flex flex-col md:flex-row md:space-x-10 space-y-3 items-start'>
+      <div className='flex flex-col md:flex-row md:space-x-10 space-y-5 items-start'>
         <h1 className='w-full md:w-3/5 uppercase font-extrabold tracking-wider text-4xl md:text-6xl'>
           The Undercommons
         </h1>
@@ -35,7 +51,10 @@ const Hero = () => {
             <Separator className='flex-1' />
           </div>
           {/* Post Listing Button */}
-          <Button className='w-full py-6'>
+          <Button
+            className='w-full py-6'
+            onClick={handlePostListing}
+          >
             <Plus className='h-4 w-4 mr-2' /> Post a Listing
           </Button>
         </div>

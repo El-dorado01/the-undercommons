@@ -2,6 +2,6 @@ import { GravityStarsBackground } from '@/components/animate-ui/components/backg
 
 export const GravityStarsBackgroundDemo = () => {
   return (
-    <GravityStarsBackground className='absolute inset-0 flex items-center justify-center rounded-xl' />
+    <GravityStarsBackground className='absolute inset-0 flex items-center justify-center rounded-xl pointer-events-none -z-10' />
   );
 };
