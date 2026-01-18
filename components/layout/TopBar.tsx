@@ -44,7 +44,7 @@ export default function TopBar() {
   const handlePostListing = () => {
     if (isAuthenticated) {
       // Navigate to post listing page (placeholder for now)
-      router.push('/listings/new');
+      router.push('/dashboard/listings/new');
     } else {
       router.push('/login');
     }

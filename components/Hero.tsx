@@ -15,7 +15,7 @@ const Hero = () => {
 
   const handlePostListing = () => {
     if (isAuthenticated) {
-      router.push('/listings/new');
+      router.push('/dashboard/listings/new');
     } else {
       router.push('/login');
     }

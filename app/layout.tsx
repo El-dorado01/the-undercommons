@@ -3,6 +3,7 @@ import { Ubuntu } from 'next/font/google';
 import './globals.css';
 import { AuthProvider } from '@/components/auth-context';
 import { Toaster } from '@/components/ui/sonner';
+import { GravityStarsBackgroundDemo } from '@/components/background';
 
 const ubuntu = Ubuntu({
   variable: '--font-ubuntu',
@@ -23,6 +24,7 @@ export default function RootLayout({
   return (
     <html lang='en'>
       <body className={`${ubuntu.variable} antialiased`}>
+        <GravityStarsBackgroundDemo />
         <AuthProvider>
           {children}
           <Toaster richColors />

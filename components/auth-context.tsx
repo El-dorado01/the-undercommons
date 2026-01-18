@@ -11,6 +11,7 @@ interface AuthContextType {
   login: (params: any) => Promise<void>;
   signup: (params: any) => Promise<void>;
   logout: () => Promise<void>;
+  updateProfile: (params: any) => Promise<void>;
   error: string | null;
 }
 
@@ -26,7 +27,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const currentUser = await sharetribeSdk.currentUser.show();
+        const currentUser = await sharetribeSdk.currentUser.show({
+          include: ['profileImage'],
+        });
         if (currentUser) {
           setUser(currentUser as unknown as CurrentUser);
           setIsAuthenticated(true);
@@ -49,7 +52,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setError(null);
     try {
       await sharetribeSdk.login(params);
-      const currentUser = await sharetribeSdk.currentUser.show();
+      const currentUser = await sharetribeSdk.currentUser.show({
+        include: ['profileImage'],
+      });
       setUser(currentUser as unknown as CurrentUser);
       setIsAuthenticated(true);
     } catch (e: any) {
@@ -77,7 +82,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         password: params.password,
       });
 
-      const currentUser = await sharetribeSdk.currentUser.show();
+      const currentUser = await sharetribeSdk.currentUser.show({
+        include: ['profileImage'],
+      });
       setUser(currentUser as unknown as CurrentUser);
       setIsAuthenticated(true);
     } catch (e: any) {
@@ -102,6 +109,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const updateProfile = async (params: any) => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      await sharetribeSdk.currentUser.updateProfile(params);
+      const currentUser = await sharetribeSdk.currentUser.show({
+        include: ['profileImage'],
+      });
+      setUser(currentUser as unknown as CurrentUser);
+    } catch (e: any) {
+      console.error('Update profile error:', e);
+      setError(e.message || 'Update failed');
+      throw e;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -111,6 +136,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         login,
         signup,
         logout,
+        updateProfile,
         error,
       }}
     >
