@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Sidebar, SidebarBody, SidebarLink } from '../ui/sidebar';
 import {
   IconSettings,
-  IconList,
+  IconClipboardList,
   IconMessage,
   IconPlus,
   IconLogout,
@@ -58,7 +58,7 @@ export function DashboardSidebar({ children }: { children: React.ReactNode }) {
       icon: pathname?.startsWith('/dashboard/listings') ? (
         <IconClipboardListFilled className='h-5 w-5 shrink-0 text-primary dark:text-primary' />
       ) : (
-        <IconList className='h-5 w-5 shrink-0 text-neutral-700 dark:text-neutral-200' />
+        <IconClipboardList className='h-5 w-5 shrink-0 text-neutral-700 dark:text-neutral-200' />
       ),
     },
     {

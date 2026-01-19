@@ -13,9 +13,12 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
+import { cn } from '@/lib/utils';
 import { sharetribeSdk } from '@/lib/sharetribe';
 import { toast } from 'sonner';
 import { Loader2, Upload, User as UserIcon } from 'lucide-react';
+import { IconPlus, IconX } from '@tabler/icons-react';
+import { AnimatePresence, motion } from 'motion/react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Textarea } from '@/components/ui/textarea';
 
@@ -192,7 +195,8 @@ export default function ProfilePage() {
                   className='object-cover'
                 />
                 <AvatarFallback className='text-4xl bg-primary/10 text-primary'>
-                  {profile?.abbreviatedName || getInitials(profile?.firstName || 'User')}
+                  {profile?.abbreviatedName ||
+                    getInitials(profile?.firstName || 'User')}
                 </AvatarFallback>
               </Avatar>
               <div className='absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/20 rounded-full'>
@@ -282,6 +286,10 @@ export default function ProfilePage() {
                 placeholder='Tell us a little bit about yourself...'
                 className='min-h-[100px]'
               />
+              <p className='text-xs text-muted-foreground'>
+                The Undercommons is built on relationships. Help other people
+                get to know you.
+              </p>
             </div>
             <div className='flex justify-end pt-2'>
               <Button
@@ -309,27 +317,63 @@ export default function ProfilePage() {
               <Label className='text-base font-semibold'>
                 What would you like to trade? (Offering)
               </Label>
-              <div className='grid grid-cols-2 md:grid-cols-5 gap-4'>
-                {TRADE_CATEGORIES.map((category) => (
-                  <div
-                    key={`offer-${category}`}
-                    className='flex items-center space-x-2'
-                  >
-                    <Checkbox
-                      id={`offer-${category}`}
-                      checked={offering.includes(category)}
-                      onCheckedChange={() =>
-                        toggleCategory(category, offering, setOffering)
-                      }
-                    />
-                    <Label
-                      htmlFor={`offer-${category}`}
-                      className='text-sm font-normal cursor-pointer'
-                    >
-                      {category}
-                    </Label>
-                  </div>
-                ))}
+              <div className='flex flex-col gap-4'>
+                {/* Selected Panel */}
+                <div
+                  className={cn(
+                    'min-h-[60px] p-4 rounded-lg border border-dashed border-neutral-300 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800/50 transition-colors',
+                    offering.length > 0 &&
+                      'border-solid border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800',
+                  )}
+                >
+                  {offering.length === 0 ? (
+                    <p className='text-sm text-neutral-500 italic'>
+                      No categories selected yet.
+                    </p>
+                  ) : (
+                    <div className='flex flex-wrap gap-2'>
+                      <AnimatePresence mode='popLayout'>
+                        {offering.map((category) => (
+                          <motion.button
+                            layout
+                            initial={{ opacity: 0, scale: 0.8 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.8 }}
+                            key={`selected-offer-${category}`}
+                            onClick={() =>
+                              toggleCategory(category, offering, setOffering)
+                            }
+                            className='group flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 text-primary hover:bg-destructive/10 hover:text-destructive text-sm font-medium transition-colors border border-primary/20 hover:border-destructive/20'
+                          >
+                            {category}
+                            <IconX className='h-3.5 w-3.5' />
+                          </motion.button>
+                        ))}
+                      </AnimatePresence>
+                    </div>
+                  )}
+                </div>
+
+                {/* Available Options */}
+                <div className='flex flex-wrap gap-2'>
+                  {TRADE_CATEGORIES.filter((c) => !offering.includes(c)).map(
+                    (category) => (
+                      <motion.button
+                        layout
+                        initial={{ opacity: 0, scale: 0.8 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        key={`avail-offer-${category}`}
+                        onClick={() =>
+                          toggleCategory(category, offering, setOffering)
+                        }
+                        className='flex items-center gap-2 px-3 py-1.5 rounded-full bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400 hover:bg-neutral-200 dark:hover:bg-neutral-700 text-sm font-medium transition-colors border border-transparent'
+                      >
+                        <IconPlus className='h-3.5 w-3.5' />
+                        {category}
+                      </motion.button>
+                    ),
+                  )}
+                </div>
               </div>
             </div>
 
@@ -338,27 +382,63 @@ export default function ProfilePage() {
               <Label className='text-base font-semibold'>
                 In exchange for (Seeking)
               </Label>
-              <div className='grid grid-cols-2 md:grid-cols-5 gap-4'>
-                {TRADE_CATEGORIES.map((category) => (
-                  <div
-                    key={`seek-${category}`}
-                    className='flex items-center space-x-2'
-                  >
-                    <Checkbox
-                      id={`seek-${category}`}
-                      checked={seeking.includes(category)}
-                      onCheckedChange={() =>
-                        toggleCategory(category, seeking, setSeeking)
-                      }
-                    />
-                    <Label
-                      htmlFor={`seek-${category}`}
-                      className='text-sm font-normal cursor-pointer'
-                    >
-                      {category}
-                    </Label>
-                  </div>
-                ))}
+              <div className='flex flex-col gap-4'>
+                {/* Selected Panel */}
+                <div
+                  className={cn(
+                    'min-h-[60px] p-4 rounded-lg border border-dashed border-neutral-300 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800/50 transition-colors',
+                    seeking.length > 0 &&
+                      'border-solid border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800',
+                  )}
+                >
+                  {seeking.length === 0 ? (
+                    <p className='text-sm text-neutral-500 italic'>
+                      No categories selected yet.
+                    </p>
+                  ) : (
+                    <div className='flex flex-wrap gap-2'>
+                      <AnimatePresence mode='popLayout'>
+                        {seeking.map((category) => (
+                          <motion.button
+                            layout
+                            initial={{ opacity: 0, scale: 0.8 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.8 }}
+                            key={`selected-seek-${category}`}
+                            onClick={() =>
+                              toggleCategory(category, seeking, setSeeking)
+                            }
+                            className='group flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 text-primary hover:bg-destructive/10 hover:text-destructive text-sm font-medium transition-colors border border-primary/20 hover:border-destructive/20'
+                          >
+                            {category}
+                            <IconX className='h-3.5 w-3.5' />
+                          </motion.button>
+                        ))}
+                      </AnimatePresence>
+                    </div>
+                  )}
+                </div>
+
+                {/* Available Options */}
+                <div className='flex flex-wrap gap-2'>
+                  {TRADE_CATEGORIES.filter((c) => !seeking.includes(c)).map(
+                    (category) => (
+                      <motion.button
+                        layout
+                        initial={{ opacity: 0, scale: 0.8 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        key={`avail-seek-${category}`}
+                        onClick={() =>
+                          toggleCategory(category, seeking, setSeeking)
+                        }
+                        className='flex items-center gap-2 px-3 py-1.5 rounded-full bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400 hover:bg-neutral-200 dark:hover:bg-neutral-700 text-sm font-medium transition-colors border border-transparent'
+                      >
+                        <IconPlus className='h-3.5 w-3.5' />
+                        {category}
+                      </motion.button>
+                    ),
+                  )}
+                </div>
               </div>
             </div>
 
