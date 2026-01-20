@@ -140,7 +140,7 @@ export function DashboardSidebar({ children }: { children: React.ReactNode }) {
             </div>
           </div>
         </div>
-        <div>
+        <div className='pb-10'>
           <SidebarLink
             link={{
               label: displayName,
