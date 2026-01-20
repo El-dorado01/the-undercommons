@@ -20,7 +20,7 @@ import { Loader2 } from 'lucide-react';
 
 export default function LoginForm() {
   const router = useRouter();
-  const { login, error: authError, isLoading } = useAuth();
+  const { login, error: authError, isLoading, clearError } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [formError, setFormError] = useState<string | null>(null);
@@ -108,6 +108,7 @@ export default function LoginForm() {
           <Link
             href='/signup'
             className='text-primary hover:underline'
+            onClick={clearError}
           >
             Sign up
           </Link>

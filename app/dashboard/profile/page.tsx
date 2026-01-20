@@ -41,7 +41,7 @@ export default function ProfilePage() {
 
   // Get avatar URL from included relationship or fallback to metadata
   const avatarUrl =
-    extendedUser?.data.included[0]?.attributes?.variants?.['default']?.url ||
+    extendedUser?.data?.included?.[0]?.attributes?.variants?.['default']?.url ||
     extendedUser?.profileImage?.attributes?.variants?.['default']?.url ||
     extendedUser?.profileImage?.attributes?.variants?.['scaled-small']?.url ||
     profile?.metadata?.avatarUrl;

@@ -71,6 +71,7 @@ export default function DashboardPage() {
   const [listings, setListings] = useState<Listing[]>([]);
   const [filteredListings, setFilteredListings] = useState<Listing[]>([]);
   const [images, setImages] = useState<Map<string, string>>(new Map());
+  const [authors, setAuthors] = useState<Map<string, string>>(new Map());
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
@@ -105,14 +106,28 @@ export default function DashboardPage() {
 
       // Build image map
       const imageMap = new Map<string, string>();
+      const authorMap = new Map<string, string>();
+
       (includedImages as any[]).forEach((item: any) => {
         if (item.type === 'image' && item.attributes?.variants?.default?.url) {
           imageMap.set(item.id.uuid, item.attributes.variants.default.url);
+        }
+        // Extract author information
+        if (item.type === 'user') {
+          const profile = item.attributes?.profile;
+          const firstName = profile?.firstName || '';
+          const lastName = profile?.lastName || '';
+          const displayName =
+            profile?.publicData?.displayName ||
+            `${firstName} ${lastName}`.trim() ||
+            'Anonymous';
+          authorMap.set(item.id.uuid, displayName);
         }
       });
 
       setListings(otherUsersListings as any);
       setImages(imageMap);
+      setAuthors(authorMap);
     } catch (error: any) {
       console.error('Failed to fetch listings:', error);
       toast.error('Failed to load listings');
@@ -156,9 +171,30 @@ export default function DashboardPage() {
     return null;
   };
 
-  const handleSendInquiry = (listingId: string) => {
-    // TODO: Implement messaging/inquiry functionality
-    toast.info('Messaging feature coming soon!');
+  const handleSendInquiry = async (listingId: string) => {
+    try {
+      // Initiate a transaction for this listing
+      const response = await sharetribeSdk.transactions.initiate({
+        processAlias: 'default-inquiry/release-1',
+        transition: 'transition/inquire',
+        params: {
+          listingId: new UUID(listingId),
+        },
+      } as any);
+
+      const transactionId = response?.data?.data?.id?.uuid;
+
+      if (transactionId) {
+        toast.success('Inquiry sent! Redirecting to messages...');
+        // Redirect to messages page after a short delay
+        setTimeout(() => {
+          router.push('/dashboard/messages');
+        }, 1000);
+      }
+    } catch (error: any) {
+      console.error('Failed to send inquiry:', error);
+      toast.error('Failed to send inquiry. Please try again.');
+    }
   };
 
   // Pagination
@@ -354,6 +390,26 @@ export default function DashboardPage() {
                   {/* Content Overlay */}
                   <div className='absolute inset-x-0 bottom-0 p-4 text-white space-y-3'>
                     <div>
+                      {/* Author Info */}
+                      <div className='flex items-center gap-2 mb-2'>
+                        {(() => {
+                          const authorName =
+                            authors.get(
+                              listing.relationships?.author?.data?.id?.uuid,
+                            ) || 'Anonymous';
+                          return (
+                            <>
+                              <div className='w-6 h-6 rounded-full bg-white/20 flex items-center justify-center text-xs font-semibold'>
+                                {authorName[0].toUpperCase()}
+                              </div>
+                              <span className='text-xs text-white/80'>
+                                {authorName}
+                              </span>
+                            </>
+                          );
+                        })()}
+                      </div>
+
                       <h3 className='text-lg font-semibold line-clamp-2 mb-1'>
                         {listing.attributes.title}
                       </h3>

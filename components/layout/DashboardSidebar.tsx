@@ -36,7 +36,8 @@ export function DashboardSidebar({ children }: { children: React.ReactNode }) {
   const getInitials = (name: string) => name.substring(0, 2).toUpperCase();
   // Get avatar URL from included relationship or fallback to metadata
   const avatarUrl =
-    (user as any)?.data.included[0]?.attributes?.variants?.['default']?.url ||
+    (user as any)?.data?.included?.[0]?.attributes?.variants?.['default']
+      ?.url ||
     (user as any)?.profileImage?.attributes?.variants?.['default']?.url ||
     (user as any)?.profileImage?.attributes?.variants?.['scaled-small']?.url ||
     (user as any)?.metadata?.avatarUrl;
@@ -140,7 +141,7 @@ export function DashboardSidebar({ children }: { children: React.ReactNode }) {
             </div>
           </div>
         </div>
-        <div className='pb-10'>
+        <div className='pb-20'>
           <SidebarLink
             link={{
               label: displayName,

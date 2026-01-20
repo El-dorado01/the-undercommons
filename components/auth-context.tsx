@@ -12,6 +12,7 @@ interface AuthContextType {
   signup: (params: any) => Promise<void>;
   logout: () => Promise<void>;
   updateProfile: (params: any) => Promise<void>;
+  clearError: () => void;
   error: string | null;
 }
 
@@ -59,7 +60,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setIsAuthenticated(true);
     } catch (e: any) {
       console.error('Login error:', e);
-      setError(e.message || 'Login failed');
+      // Handle 401 Unauthorized - invalid credentials or account doesn't exist
+      if (e.status === 401 || e.response?.status === 401) {
+        setError(
+          'Invalid email or password. Please check your credentials or sign up for a new account.',
+        );
+      } else {
+        setError(e.message || 'Login failed');
+      }
       throw e;
     } finally {
       setIsLoading(false);
@@ -89,7 +97,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setIsAuthenticated(true);
     } catch (e: any) {
       console.error('Signup error:', e);
-      setError(e.message || 'Signup failed');
+      // Handle 409 Conflict - user already exists
+      if (e.status === 409 || e.response?.status === 409) {
+        setError(
+          'An account with this email already exists. Please login instead.',
+        );
+      } else {
+        setError(e.message || 'Signup failed');
+      }
       throw e;
     } finally {
       setIsLoading(false);
@@ -127,6 +142,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const clearError = () => {
+    setError(null);
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -137,6 +156,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         signup,
         logout,
         updateProfile,
+        clearError,
         error,
       }}
     >
