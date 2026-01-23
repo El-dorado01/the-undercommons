@@ -20,24 +20,24 @@ export const Logo = ({
 }: LogoProps) => {
   const sizeClasses = {
     sm: {
-      text: 'text-lg',
+      text: 'text-base',
+      dot: 'w-0.5 h-0.5',
+      gap: 'gap-0.5',
+    },
+    md: {
+      text: 'text-xl',
       dot: 'w-1 h-1',
       gap: 'gap-1',
     },
-    md: {
+    lg: {
       text: 'text-2xl',
       dot: 'w-1.5 h-1.5',
       gap: 'gap-1.5',
     },
-    lg: {
+    xl: {
       text: 'text-4xl',
       dot: 'w-2 h-2',
       gap: 'gap-2',
-    },
-    xl: {
-      text: 'text-6xl',
-      dot: 'w-3 h-3',
-      gap: 'gap-3',
     },
   };
 
@@ -62,14 +62,14 @@ export const Logo = ({
     <Link
       href='/'
       className={cn(
-        'group flex flex-col justify-center items-center transition-opacity hover:opacity-90 font-serif font-semibold',
+        'group flex flex-col justify-center items-center transition-opacity hover:opacity-90 font-serif font-semibold shrink-0',
         className,
       )}
     >
       {!iconOnly && (
         <span
           className={cn(
-            'font-lora lowercase text-foreground tracking-tight',
+            'font-lora lowercase text-foreground tracking-tight whitespace-nowrap shrink-0',
             currentSize.text,
           )}
         >
