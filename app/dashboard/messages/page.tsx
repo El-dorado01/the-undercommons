@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { useAuth } from '@/components/auth-context';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -45,7 +46,8 @@ interface Conversation {
 }
 
 export default function MessagesPage() {
-  const { user } = useAuth();
+  const { user, isAuthenticated } = useAuth();
+  const searchParams = useSearchParams();
   const [activeTab, setActiveTab] = useState<'giver' | 'seeker'>('giver');
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [selectedConversation, setSelectedConversation] = useState<
@@ -56,13 +58,24 @@ export default function MessagesPage() {
   const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
+    const tabParam = searchParams.get('tab');
+    if (tabParam === 'seeker' || tabParam === 'giver') {
+      setActiveTab(tabParam as 'giver' | 'seeker');
+    }
+  }, [searchParams]);
+
+  useEffect(() => {
     fetchConversations();
   }, [activeTab]);
 
   const fetchConversations = async () => {
+    if (!isAuthenticated) return;
+
     setIsLoading(true);
     try {
       const currentUserId = (user as any)?.data?.data?.id?.uuid;
+      console.log('Current User ID:', currentUserId);
+
       if (!currentUserId) {
         setConversations([]);
         setIsLoading(false);
@@ -70,10 +83,17 @@ export default function MessagesPage() {
       }
 
       // Fetch transactions based on role
-      const response = await sharetribeSdk.transactions.query({
+      // For Giver: I am the provider (selling/giving) -> look for 'sale'
+      // For Seeker: I am the customer (buying/receiving) -> look for 'order'
+      const queryParams = {
         only: activeTab === 'giver' ? 'sale' : 'order',
         include: ['listing', 'provider', 'customer', 'messages'],
-      } as any);
+        lastTransitions: ['transition/inquire'],
+      };
+
+      const response = await sharetribeSdk.transactions.query(
+        queryParams as any,
+      );
 
       const transactions = response?.data?.data || [];
       const included = response?.data?.included || [];

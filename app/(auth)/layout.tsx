@@ -1,4 +1,4 @@
-import { GravityStarsBackgroundDemo } from '@/components/background';
+import { Logo } from "@/components/ui/logo";
 
 export default function AuthLayout({
   children,
@@ -7,9 +7,9 @@ export default function AuthLayout({
 }) {
   return (
     <>
-      <GravityStarsBackgroundDemo />
-      <div className='flex min-h-screen items-center justify-center p-4'>
-        {children}
+      <div className='flex min-h-screen flex-col items-center justify-center p-4 gap-4'>
+        <Logo />
+        <div className='w-full'>{children}</div>
       </div>
     </>
   );

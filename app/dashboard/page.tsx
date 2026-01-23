@@ -188,12 +188,19 @@ export default function DashboardPage() {
         toast.success('Inquiry sent! Redirecting to messages...');
         // Redirect to messages page after a short delay
         setTimeout(() => {
-          router.push('/dashboard/messages');
+          router.push('/dashboard/messages?tab=seeker');
         }, 1000);
       }
     } catch (error: any) {
       console.error('Failed to send inquiry:', error);
-      toast.error('Failed to send inquiry. Please try again.');
+      if (error.status === 409 || error.response?.status === 409) {
+        toast.info('You already have an open conversation for this listing.');
+        setTimeout(() => {
+          router.push('/dashboard/messages?tab=seeker');
+        }, 1000);
+      } else {
+        toast.error('Failed to send inquiry. Please try again.');
+      }
     }
   };
 
@@ -393,10 +400,11 @@ export default function DashboardPage() {
                       {/* Author Info */}
                       <div className='flex items-center gap-2 mb-2'>
                         {(() => {
+                          const authorId =
+                            listing.relationships?.author?.data?.id?.uuid;
                           const authorName =
-                            authors.get(
-                              listing.relationships?.author?.data?.id?.uuid,
-                            ) || 'Anonymous';
+                            (authorId ? authors.get(authorId) : null) ||
+                            'Anonymous';
                           return (
                             <>
                               <div className='w-6 h-6 rounded-full bg-white/20 flex items-center justify-center text-xs font-semibold'>

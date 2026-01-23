@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { Ubuntu } from 'next/font/google';
+import { Ubuntu, Lora } from 'next/font/google';
 import './globals.css';
 import { AuthProvider } from '@/components/auth-context';
 import { Toaster } from '@/components/ui/sonner';
@@ -9,6 +9,11 @@ const ubuntu = Ubuntu({
   variable: '--font-ubuntu',
   subsets: ['latin'],
   weight: ['400', '700'],
+});
+
+const lora = Lora({
+  variable: '--font-lora',
+  subsets: ['latin'],
 });
 
 export const metadata: Metadata = {
@@ -23,7 +28,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang='en'>
-      <body className={`${ubuntu.variable} antialiased`}>
+      <body
+        className={`${ubuntu.variable} ${lora.variable} antialiased relative`}
+      >
         <GravityStarsBackgroundDemo />
         <AuthProvider>
           {children}

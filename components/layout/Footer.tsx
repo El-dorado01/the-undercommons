@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { Twitter, Instagram, Linkedin } from 'lucide-react';
-import Image from 'next/image';
+import { Logo } from '@/components/ui/logo';
 
 export default function Footer() {
   return (
@@ -20,16 +20,10 @@ export default function Footer() {
           <div className='md:col-span-2 space-y-8'>
             <div className='space-y-4'>
               <div className='flex items-center gap-2'>
-                <Image
-                  src='/logo.png'
-                  alt='Logo'
-                  width={40}
-                  height={40}
-                  className='object-contain'
+                <Logo
+                  size='sm'
+                  className='items-start'
                 />
-                <span className='font-bold text-xl tracking-tight'>
-                  The Undercommons
-                </span>
               </div>
               <p className='text-muted-foreground text-sm leading-relaxed max-w-sm'>
                 Building a community where value is shared, not just spent. Join

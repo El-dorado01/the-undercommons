@@ -77,27 +77,27 @@ export default function Testimonials() {
           <span className='text-sm font-medium tracking-widest text-muted-foreground uppercase'>
             // Testimonials //
           </span>
-          <h2 className='text-2xl md:text-3xl font-bold tracking-tight text-foreground uppercase'>
+          <h2 className='text-3xl md:text4xl font-extrabold tracking-tight text-foreground uppercase'>
             What Our Clients Say
           </h2>
         </div>
 
         <div className='flex gap-2'>
           <Button
-            variant='outline'
+            variant='default'
             size='icon'
-            className='rounded-full h-12 w-12 border-primary/20 hover:bg-background hover:border-primary/30 transition-all'
+            className='rounded-full h-12 w-12 bg-primary hover:bg-primary/90 shadow-md hover:shadow-lg transition-all'
             onClick={prevTestimonial}
           >
-            <ArrowLeft className='h-5 w-5 text-primary' />
+            <ArrowLeft className='h-5 w-5' />
           </Button>
           <Button
-            variant='outline'
+            variant='default'
             size='icon'
-            className='rounded-full h-12 w-12 border-primary/20 hover:bg-background hover:border-primary/30 transition-all'
+            className='rounded-full h-12 w-12 bg-primary hover:bg-primary/90 shadow-md hover:shadow-lg transition-all'
             onClick={nextTestimonial}
           >
-            <ArrowRight className='h-5 w-5 text-primary' />
+            <ArrowRight className='h-5 w-5' />
           </Button>
         </div>
       </div>

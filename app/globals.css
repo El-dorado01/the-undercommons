@@ -1,11 +1,10 @@
 @import 'tailwindcss';
-@import "tw-animate-css";
+@import 'tw-animate-css';
 
 @custom-variant dark (&:is(.dark *));
 
 /* Light theme is the default — variables set on :root */
 :root {
-
   /* Branding colors (OKLCH conversions) */
   /* Primary: #D9A273 -> oklch(75.37% 0.101 35deg) */
   --color-primary: oklch(75.37% 0.101 35deg);
@@ -13,19 +12,19 @@
 
   /* Secondary (rarely used): #442C67 -> oklch(35.30% 0.054 264.2deg) */
   --color-secondary: oklch(35.3% 0.054 264.2deg);
-  --radius: 0.625rem;
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.141 0.005 285.823);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.141 0.005 285.823);
+  --radius: 0.125rem;
+  --background: oklch(0.94 0.03 92); /* Deeper Natural Off-White */
+  --foreground: oklch(0.25 0.02 92); /* Soft Charcoal */
+  --card: oklch(0.92 0.03 92); /* Slightly deeper/warmer for cards */
+  --card-foreground: oklch(0.25 0.02 92);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.141 0.005 285.823);
   --primary: oklch(0.21 0.006 285.885);
   --primary-foreground: oklch(0.985 0 0);
   --secondary: oklch(0.967 0.001 286.375);
   --secondary-foreground: oklch(0.21 0.006 285.885);
-  --muted: oklch(0.967 0.001 286.375);
-  --muted-foreground: oklch(0.552 0.016 285.938);
+  --muted: oklch(0.94 0.03 92);
+  --muted-foreground: oklch(0.45 0.02 92);
   --accent: oklch(0.967 0.001 286.375);
   --accent-foreground: oklch(0.21 0.006 285.885);
   --destructive: oklch(0.577 0.245 27.325);
@@ -37,8 +36,8 @@
   --chart-3: oklch(0.398 0.07 227.392);
   --chart-4: oklch(0.828 0.189 84.429);
   --chart-5: oklch(0.769 0.188 70.08);
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.141 0.005 285.823);
+  --sidebar: oklch(0.96 0.03 92);
+  --sidebar-foreground: oklch(0.25 0.02 92);
   --sidebar-primary: oklch(0.21 0.006 285.885);
   --sidebar-primary-foreground: oklch(0.985 0 0);
   --sidebar-accent: oklch(0.967 0.001 286.375);
@@ -93,7 +92,6 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-
     /* Keep the hue for primary in dark mode but reduce lightness for better vibrancy */
     --color-primary: oklch(63% 0.11 35deg);
     --color-primary-foreground: #ededed;

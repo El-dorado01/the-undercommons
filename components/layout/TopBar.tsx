@@ -19,6 +19,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useAuth } from '@/components/auth-context';
 import { useRouter } from 'next/navigation';
+import { Logo } from '@/components/ui/logo';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -84,17 +85,10 @@ export default function TopBar() {
         {/* LEFT - Logo + Navigation */}
         <div className='flex items-center gap-10'>
           {/* Logo */}
-          <Link
-            href='/'
-            className='flex items-center gap-2.5'
-          >
-            <Image
-              src='/logo.png'
-              alt='Logo'
-              width={50}
-              height={50}
-            />
-          </Link>
+          <Logo
+            size='sm'
+            className='items-start'
+          />
 
           {/* Main Navigation - hidden on mobile */}
           <nav className='hidden md:flex items-center gap-7'>
