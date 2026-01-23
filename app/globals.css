@@ -4,6 +4,10 @@
 @custom-variant dark (&:is(.dark *));
 
 /* Light theme is the default — variables set on :root */
+html {
+  scroll-behavior: smooth;
+}
+
 :root {
   /* Branding colors (OKLCH conversions) */
   /* Primary: #D9A273 -> oklch(75.37% 0.101 35deg) */

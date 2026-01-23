@@ -72,13 +72,14 @@ const Hero = () => {
 
         {/* CTA Buttons */}
         <Button
-          asChild
           variant={'outline'}
           className='mt-6 py-6'
+          onClick={() => {
+            const element = document.getElementById('featured');
+            element?.scrollIntoView({ behavior: 'smooth' });
+          }}
         >
-          <Link href={'/discover'}>
-            Discover More <ArrowRight className='h-4 w-4 ml-2' />
-          </Link>
+          Discover More <ArrowRight className='h-4 w-4 ml-2' />
         </Button>
       </div>
     </section>

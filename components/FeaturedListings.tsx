@@ -94,7 +94,10 @@ export default function FeaturedListings() {
   );
 
   return (
-    <section className='py-16 md:py-24 overflow-hidden relative'>
+    <section
+      id='featured'
+      className='py-16 md:py-24 overflow-hidden relative'
+    >
       <div className='max-w-7xl mx-auto mb-10 md:mb-12 flex flex-col md:flex-row items-start md:items-end justify-between gap-4'>
         <div>
           <h2 className='text-3xl md:text-4xl font-extrabold tracking-tight mb-4 uppercase'>
