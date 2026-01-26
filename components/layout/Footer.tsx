@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { Twitter, Instagram, Linkedin } from 'lucide-react';
+import { Instagram, Mail } from 'lucide-react';
 import { Logo } from '@/components/ui/logo';
 
 export default function Footer() {
@@ -38,22 +38,19 @@ export default function Footer() {
               </h3>
               <div className='flex gap-3'>
                 <Link
-                  href='#'
-                  className='p-2 bg-gray-100 rounded-full hover:bg-gray-200 transition-colors text-foreground'
-                >
-                  <Twitter className='w-4 h-4' />
-                </Link>
-                <Link
-                  href='#'
-                  className='p-2 bg-gray-100 rounded-full hover:bg-gray-200 transition-colors text-foreground'
+                  href='https://www.instagram.com/the.undercommons/'
+                  target='_blank'
+                  rel='noopener noreferrer'
+                  className='flex items-center gap-2 p-2 bg-gray-100 rounded-full hover:bg-gray-200 transition-colors text-foreground px-3'
                 >
                   <Instagram className='w-4 h-4' />
+                  <span className='text-xs font-medium'>the.undercommons</span>
                 </Link>
                 <Link
-                  href='#'
+                  href='mailto:contactus@theundercommons.com'
                   className='p-2 bg-gray-100 rounded-full hover:bg-gray-200 transition-colors text-foreground'
                 >
-                  <Linkedin className='w-4 h-4' />
+                  <Mail className='w-4 h-4' />
                 </Link>
               </div>
             </div>

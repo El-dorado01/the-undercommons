@@ -177,7 +177,7 @@ export function PhotosStep({
       <CardHeader>
         <CardTitle>Photos</CardTitle>
         <CardDescription>
-          Add a photo to make your listing stand out.
+          Add a photo to show your offer or how it works.
         </CardDescription>
       </CardHeader>
       <CardContent className='space-y-6'>

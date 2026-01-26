@@ -344,11 +344,12 @@ export default function NewListingPage() {
               />
             )}
 
-            <CardFooter className='flex justify-between pt-6 border-t bg-neutral-50/50 dark:bg-neutral-900/50'>
+            <CardFooter className='flex justify-between pt-6 border-t'>
               <Button
                 variant='outline'
                 onClick={prevStep}
                 disabled={currentStep === 1 || isLoading}
+                className='bg-white text-black hover:bg-white/90'
               >
                 <ChevronLeft className='w-4 h-4 mr-2' />
                 Back

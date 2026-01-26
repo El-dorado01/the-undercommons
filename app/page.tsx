@@ -14,7 +14,7 @@ export default function Home() {
         <Hero />
         <FeaturedListings />
         <BarterCategories />
-        <Testimonials />
+        {/* <Testimonials /> */}
         <VideoSection />
         <Footer />
       </main>

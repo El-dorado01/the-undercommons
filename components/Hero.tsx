@@ -38,6 +38,7 @@ const Hero = () => {
             <Button
               size={'icon'}
               aria-label='Search'
+              className='bg-white text-black hover:bg-white/90'
             >
               <Search className='h-4 w-4' />
             </Button>
@@ -52,7 +53,7 @@ const Hero = () => {
           </div>
           {/* Post Listing Button */}
           <Button
-            className='w-full py-6'
+            className='w-full py-6 bg-white text-black hover:bg-white/90'
             onClick={handlePostListing}
           >
             <Plus className='h-4 w-4 mr-2' /> Post a Listing

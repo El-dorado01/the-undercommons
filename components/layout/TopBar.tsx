@@ -4,7 +4,7 @@
 import {
   Menu,
   PanelTopOpen,
-  Phone,
+  Mail,
   User,
   LogOut,
   LayoutDashboard,
@@ -107,13 +107,13 @@ export default function TopBar() {
         {/* RIGHT - Contact + CTA + Mobile Menu */}
         {/* RIGHT - Contact + CTA + Mobile Menu */}
         <div className='flex items-center gap-3 sm:gap-4'>
-          {/* Phone - visible on larger screens */}
+          {/* Contact us - visible on larger screens */}
           <Link
-            href='tel:+49123456789'
+            href='mailto:contactus@theundercommons.com'
             className='hidden lg:flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-primary transition-colors'
           >
-            <Phone size={18} />
-            <span>+49 123 456 789</span>
+            <Mail size={18} />
+            <span>Contact us</span>
           </Link>
 
           {/* CTA Button - "Post a Listing" */}
