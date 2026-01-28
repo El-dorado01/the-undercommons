@@ -25,7 +25,7 @@ const MOCK_LISTINGS = [
     description:
       'I can teach you acoustic or electric guitar (beginner to intermediate) in exchange for help with my React project.',
     category: 'Skill',
-    location: 'Berlin, DE',
+    location: 'New York, NY',
     author: 'Alex M.',
     image:
       'https://images.unsplash.com/photo-1511379938547-c1f69419868d?w=800&auto=format&fit=crop',
@@ -36,7 +36,7 @@ const MOCK_LISTINGS = [
     description:
       'Offering weekend gardening labor. Happy to help weed, plant, or harvest in exchange for a box of fresh veggies.',
     category: 'Labor',
-    location: 'Hamburg, DE',
+    location: 'Austin, TX',
     author: 'Sarah K.',
     image:
       'https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=800&auto=format&fit=crop',
@@ -47,18 +47,18 @@ const MOCK_LISTINGS = [
     description:
       'Have a Canon AE-1 in great condition. Looking to trade for a decent road bike or similar value item.',
     category: 'Items',
-    location: 'Munich, DE',
+    location: 'San Francisco, CA',
     author: 'Jonas B.',
     image:
       'https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f?w=800&auto=format&fit=crop',
   },
   {
     id: '4',
-    title: 'Co-working Desk in Kreuzberg',
+    title: 'Co-working Desk in Chicago',
     description:
       'I have an empty desk in my studio. Available Mon-Fri 9-5. Looking for graphic design help in return.',
     category: 'Space',
-    location: 'Berlin, DE',
+    location: 'Chicago, IL',
     author: 'Elena R.',
     image:
       'https://images.unsplash.com/photo-1497366216548-37526070297c?w=800&auto=format&fit=crop',
@@ -69,7 +69,7 @@ const MOCK_LISTINGS = [
     description:
       'Love dogs? I need a walker for my Golden Retriever twice a week. I can teach you Spanish (native speaker).',
     category: 'Time',
-    location: 'Cologne, DE',
+    location: 'Seattle, WA',
     author: 'Mateo L.',
     image:
       'https://images.unsplash.com/photo-1601758228041-f3b2795255f1?w=800&auto=format&fit=crop',
@@ -80,7 +80,7 @@ const MOCK_LISTINGS = [
     description:
       'Professional carpenter offering 5 hours of work (shelves, repairs, etc.) in exchange for SEO audit of my site.',
     category: 'Skill',
-    location: 'Frankfurt, DE',
+    location: 'Portland, OR',
     author: 'Thomas W.',
     image:
       'https://images.unsplash.com/photo-1504148455328-c376907d081c?w=800&auto=format&fit=crop',

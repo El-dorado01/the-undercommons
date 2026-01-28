@@ -173,14 +173,44 @@ export default function DashboardPage() {
 
   const handleSendInquiry = async (listingId: string) => {
     try {
-      // Initiate a transaction for this listing
-      const response = await sharetribeSdk.transactions.initiate({
-        processAlias: 'default-inquiry/release-1',
-        transition: 'transition/inquire',
-        params: {
-          listingId: new UUID(listingId),
-        },
+      const currentUserId = (user as any)?.data?.data?.id?.uuid;
+      if (!currentUserId) {
+        toast.error('You must be logged in to send an inquiry.');
+        return;
+      }
+
+      // 1. Check for existing transactions first to avoid duplicates
+      // Use 'only: order' to find transactions where current user is the customer
+      const existingRes = await sharetribeSdk.transactions.query({
+        listingId: new UUID(listingId),
+        only: 'order',
+        lastTransitions: ['transition/inquire-without-payment'],
       } as any);
+
+      if (existingRes?.data?.data?.length > 0) {
+        const transactionId = existingRes.data.data[0].id.uuid;
+        toast.info(
+          'You already have a conversation for this listing. Redirecting...',
+        );
+        setTimeout(() => {
+          router.push(`/dashboard/messages?tab=seeker&id=${transactionId}`);
+        }, 1000);
+        return;
+      }
+
+      // 2. Initiate a new transaction
+      const response = await sharetribeSdk.transactions.initiate(
+        {
+          processAlias: 'default-inquiry/release-1',
+          transition: 'transition/inquire-without-payment',
+          params: {
+            listingId: new UUID(listingId),
+          },
+        } as any,
+        {
+          expand: true,
+        },
+      );
 
       const transactionId = response?.data?.data?.id?.uuid;
 
@@ -188,7 +218,7 @@ export default function DashboardPage() {
         toast.success('Inquiry sent! Redirecting to messages...');
         // Redirect to messages page after a short delay
         setTimeout(() => {
-          router.push('/dashboard/messages?tab=seeker');
+          router.push(`/dashboard/messages?tab=seeker&id=${transactionId}`);
         }, 1000);
       }
     } catch (error: any) {

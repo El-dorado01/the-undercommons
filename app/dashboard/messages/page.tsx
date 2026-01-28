@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useAuth } from '@/components/auth-context';
 import { Button } from '@/components/ui/button';
@@ -46,7 +46,7 @@ interface Conversation {
 }
 
 export default function MessagesPage() {
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, isLoading: isAuthLoading } = useAuth();
   const searchParams = useSearchParams();
   const [activeTab, setActiveTab] = useState<'giver' | 'seeker'>('giver');
   const [conversations, setConversations] = useState<Conversation[]>([]);
@@ -56,84 +56,200 @@ export default function MessagesPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [messageInput, setMessageInput] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
+  const [messageHistory, setMessageHistory] = useState<
+    Record<string, Message[]>
+  >({});
+  const [isMessagesLoading, setIsMessagesLoading] = useState(false);
+
+  const fetchIdRef = useRef(0);
 
   useEffect(() => {
     const tabParam = searchParams.get('tab');
     if (tabParam === 'seeker' || tabParam === 'giver') {
-      setActiveTab(tabParam as 'giver' | 'seeker');
+      if (tabParam !== activeTab) {
+        setActiveTab(tabParam as 'giver' | 'seeker');
+        setSelectedConversation(null); // Reset when switching tabs manually
+      }
     }
-  }, [searchParams]);
+
+    const idParam = searchParams.get('id');
+    if (idParam && idParam !== selectedConversation) {
+      setSelectedConversation(idParam);
+    }
+  }, [searchParams, activeTab, selectedConversation]);
+
+  const fetchConversations = useCallback(
+    async (tabToFetch: 'giver' | 'seeker') => {
+      if (!isAuthenticated || isAuthLoading) return;
+
+      const currentFetchId = ++fetchIdRef.current;
+      setIsLoading(true);
+      try {
+        const currentUserId = (user as any)?.data?.data?.id?.uuid;
+
+        if (!currentUserId) {
+          if (currentFetchId === fetchIdRef.current) {
+            setConversations([]);
+            setIsLoading(false);
+          }
+          return;
+        }
+
+        // Fetch transactions based on role
+        const queryParams = {
+          only: tabToFetch === 'giver' ? 'sale' : 'order',
+          include: [
+            'listing',
+            'provider',
+            'customer',
+            'messages',
+            'lastMessage',
+          ],
+          lastTransitions: ['transition/inquire-without-payment'],
+        };
+
+        const response = await sharetribeSdk.transactions.query(
+          queryParams as any,
+        );
+
+        // If a newer fetch has started, ignore this response
+        if (currentFetchId !== fetchIdRef.current) return;
+
+        const transactions = response?.data?.data || [];
+        const included = response?.data?.included || [];
+
+        // 1. Build a map of all included resources by ID for easy lookup
+        const includedMap = new Map();
+        (included as any[]).forEach((item: any) => {
+          includedMap.set(item.id.uuid, item);
+        });
+
+        // 2. Prepare message history update
+        const historyUpdate: Record<string, Message[]> = {};
+
+        // Transform transactions into conversations
+        const convs: Conversation[] = transactions.map((tx: any) => {
+          const listingId = tx.relationships?.listing?.data?.id?.uuid;
+          const providerId = tx.relationships?.provider?.data?.id?.uuid;
+          const customerId = tx.relationships?.customer?.data?.id?.uuid;
+
+          // Determine the other party based on role
+          const otherPartyId = tabToFetch === 'giver' ? customerId : providerId;
+
+          // Find messages for this transaction from relationships
+          const txMsgRefs = tx.relationships?.messages?.data || [];
+          const lastMsgRef = tx.relationships?.lastMessage?.data;
+
+          const txMessages: Message[] = [];
+
+          // Add all referenced messages that are in 'included'
+          txMsgRefs.forEach((ref: any) => {
+            const msgData = includedMap.get(ref.id.uuid);
+            if (msgData && msgData.type === 'message') {
+              txMessages.push({
+                id: msgData.id.uuid,
+                content: msgData.attributes.content,
+                senderId: msgData.relationships?.sender?.data?.id?.uuid,
+                createdAt: msgData.attributes.createdAt,
+              });
+            }
+          });
+
+          // Ensure lastMessage is included if it's not already in txMessages
+          if (lastMsgRef) {
+            const hasLastMsg = txMessages.some(
+              (m) => m.id === lastMsgRef.id.uuid,
+            );
+            if (!hasLastMsg) {
+              const msgData = includedMap.get(lastMsgRef.id.uuid);
+              if (msgData && msgData.type === 'message') {
+                txMessages.push({
+                  id: msgData.id.uuid,
+                  content: msgData.attributes.content,
+                  senderId: msgData.relationships?.sender?.data?.id?.uuid,
+                  createdAt: msgData.attributes.createdAt,
+                });
+              }
+            }
+          }
+
+          // Sort messages by date
+          txMessages.sort(
+            (a, b) =>
+              new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
+          );
+
+          if (txMessages.length > 0) {
+            historyUpdate[tx.id.uuid] = txMessages;
+          }
+
+          const lastMsg = txMessages[txMessages.length - 1];
+          const listing = includedMap.get(listingId);
+          const otherParty = includedMap.get(otherPartyId);
+
+          let otherPartyName = 'Unknown User';
+          if (otherParty) {
+            const profile = otherParty.attributes?.profile;
+            const firstName = profile?.firstName || '';
+            const lastName = profile?.lastName || '';
+            otherPartyName =
+              profile?.publicData?.displayName ||
+              `${firstName} ${lastName}`.trim() ||
+              'User';
+          }
+
+          return {
+            id: tx.id.uuid,
+            listingId: listingId || '',
+            listingTitle: listing?.attributes?.title || 'Unknown Listing',
+            otherPartyId: otherPartyId || '',
+            otherPartyName,
+            lastMessage: lastMsg?.content || 'No messages yet',
+            lastMessageTime: lastMsg?.createdAt || tx.attributes.createdAt,
+            unread: false,
+            messages: txMessages,
+          };
+        });
+
+        setMessageHistory((prev) => ({
+          ...prev,
+          ...historyUpdate,
+        }));
+
+        setConversations(convs);
+      } catch (error: any) {
+        if (currentFetchId === fetchIdRef.current) {
+          console.error('Failed to fetch conversations:', error);
+          toast.error('Failed to load messages');
+          setConversations([]);
+        }
+      } finally {
+        if (currentFetchId === fetchIdRef.current) {
+          setIsLoading(false);
+        }
+      }
+    },
+    [isAuthenticated, isAuthLoading, user],
+  );
 
   useEffect(() => {
-    fetchConversations();
-  }, [activeTab]);
+    if (isAuthenticated && !isAuthLoading) {
+      fetchConversations(activeTab);
+    }
+  }, [activeTab, isAuthenticated, isAuthLoading, fetchConversations]);
 
-  const fetchConversations = async () => {
-    if (!isAuthenticated) return;
+  const fetchMessages = useCallback(
+    async (transactionId: string) => {
+      if (!isAuthenticated || isAuthLoading) return;
 
-    setIsLoading(true);
-    try {
-      const currentUserId = (user as any)?.data?.data?.id?.uuid;
-      console.log('Current User ID:', currentUserId);
+      setIsMessagesLoading(true);
+      try {
+        const response = await sharetribeSdk.messages.query({
+          transactionId: new UUID(transactionId),
+          include: ['sender'],
+        } as any);
 
-      if (!currentUserId) {
-        setConversations([]);
-        setIsLoading(false);
-        return;
-      }
-
-      // Fetch transactions based on role
-      // For Giver: I am the provider (selling/giving) -> look for 'sale'
-      // For Seeker: I am the customer (buying/receiving) -> look for 'order'
-      const queryParams = {
-        only: activeTab === 'giver' ? 'sale' : 'order',
-        include: ['listing', 'provider', 'customer', 'messages'],
-        lastTransitions: ['transition/inquire'],
-      };
-
-      const response = await sharetribeSdk.transactions.query(
-        queryParams as any,
-      );
-
-      const transactions = response?.data?.data || [];
-      const included = response?.data?.included || [];
-
-      // Build maps for listings and users
-      const listingsMap = new Map();
-      const usersMap = new Map();
-
-      (included as any[]).forEach((item: any) => {
-        if (item.type === 'listing') {
-          listingsMap.set(item.id.uuid, item.attributes.title);
-        }
-        if (item.type === 'user') {
-          const profile = item.attributes?.profile;
-          const firstName = profile?.firstName || '';
-          const lastName = profile?.lastName || '';
-          const displayName =
-            profile?.publicData?.displayName ||
-            `${firstName} ${lastName}`.trim() ||
-            'User';
-          usersMap.set(item.id.uuid, displayName);
-        }
-      });
-
-      // Transform transactions into conversations
-      const convs: Conversation[] = transactions.map((tx: any) => {
-        const listingId = tx.relationships?.listing?.data?.id?.uuid;
-        const providerId = tx.relationships?.provider?.data?.id?.uuid;
-        const customerId = tx.relationships?.customer?.data?.id?.uuid;
-
-        // Determine the other party based on role
-        const otherPartyId = activeTab === 'giver' ? customerId : providerId;
-
-        // Get messages for this transaction
-        const txMessages = (included as any[])
-          .filter(
-            (item: any) =>
-              item.type === 'message' &&
-              item.relationships?.transaction?.data?.id?.uuid === tx.id.uuid,
-          )
+        const messages = (response?.data?.data || [])
           .map((msg: any) => ({
             id: msg.id.uuid,
             content: msg.attributes.content,
@@ -145,30 +261,24 @@ export default function MessagesPage() {
               new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
           );
 
-        const lastMsg = txMessages[txMessages.length - 1];
+        setMessageHistory((prev) => ({
+          ...prev,
+          [transactionId]: messages,
+        }));
+      } catch (error) {
+        console.error('Failed to fetch messages:', error);
+      } finally {
+        setIsMessagesLoading(false);
+      }
+    },
+    [isAuthenticated, isAuthLoading],
+  );
 
-        return {
-          id: tx.id.uuid,
-          listingId: listingId || '',
-          listingTitle: listingsMap.get(listingId) || 'Unknown Listing',
-          otherPartyId: otherPartyId || '',
-          otherPartyName: usersMap.get(otherPartyId) || 'Unknown User',
-          lastMessage: lastMsg?.content || 'No messages yet',
-          lastMessageTime: lastMsg?.createdAt || tx.attributes.createdAt,
-          unread: false,
-          messages: txMessages,
-        };
-      });
-
-      setConversations(convs);
-    } catch (error: any) {
-      console.error('Failed to fetch conversations:', error);
-      toast.error('Failed to load messages');
-      setConversations([]);
-    } finally {
-      setIsLoading(false);
+  useEffect(() => {
+    if (selectedConversation) {
+      fetchMessages(selectedConversation);
     }
-  };
+  }, [selectedConversation, fetchMessages]);
 
   const handleSendMessage = async () => {
     if (!messageInput.trim() || !selectedConversation) return;
@@ -182,21 +292,42 @@ export default function MessagesPage() {
       toast.success('Message sent');
       setMessageInput('');
 
-      // Refresh conversations to show new message
-      await fetchConversations();
+      // Refresh both conversation list and specific thread messages
+      await Promise.all([
+        fetchConversations(activeTab),
+        fetchMessages(selectedConversation),
+      ]);
     } catch (error: any) {
       console.error('Failed to send message:', error);
       toast.error('Failed to send message');
     }
   };
 
-  const filteredConversations = conversations.filter(
+  const conversationsWithHistory = conversations.map((conv) => {
+    const history = messageHistory[conv.id];
+    if (history && history.length > 0) {
+      const lastMsg = history[history.length - 1];
+      return {
+        ...conv,
+        lastMessage: lastMsg.content,
+        lastMessageTime: lastMsg.createdAt,
+      };
+    }
+    return conv;
+  });
+
+  const filteredConversations = conversationsWithHistory.filter(
     (conv) =>
       conv.listingTitle.toLowerCase().includes(searchQuery.toLowerCase()) ||
       conv.otherPartyName.toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
-  const selectedConv = conversations.find((c) => c.id === selectedConversation);
+  const selectedConv = conversationsWithHistory.find(
+    (c) => c.id === selectedConversation,
+  );
+  const currentMessages = selectedConversation
+    ? messageHistory[selectedConversation] || selectedConv?.messages || []
+    : [];
 
   return (
     <div className='w-full py-6 flex flex-col gap-6'>
@@ -211,7 +342,10 @@ export default function MessagesPage() {
       {/* Tabs */}
       <Tabs
         value={activeTab}
-        onValueChange={(v) => setActiveTab(v as 'giver' | 'seeker')}
+        onValueChange={(v) => {
+          setActiveTab(v as 'giver' | 'seeker');
+          setSelectedConversation(null); // Reset when switching tabs
+        }}
       >
         <TabsList className='grid w-full max-w-md grid-cols-2'>
           <TabsTrigger
@@ -234,9 +368,9 @@ export default function MessagesPage() {
           value={activeTab}
           className='mt-6'
         >
-          <div className='grid grid-cols-1 lg:grid-cols-3 gap-6 min-h-[500px] lg:h-[calc(100vh-350px)]'>
+          <div className='grid grid-cols-1 lg:grid-cols-3 gap-6 h-[calc(100vh-280px)] min-h-[600px]'>
             {/* Conversations List */}
-            <Card className='lg:col-span-1 h-[350px] lg:h-auto flex flex-col'>
+            <Card className='lg:col-span-1 flex flex-col overflow-hidden h-[400px] lg:h-full'>
               <CardHeader className='pb-3 shrink-0'>
                 <CardTitle className='text-lg'>Conversations</CardTitle>
                 <div className='relative mt-2'>
@@ -249,8 +383,8 @@ export default function MessagesPage() {
                   />
                 </div>
               </CardHeader>
-              <CardContent className='p-0 flex-1 overflow-hidden'>
-                <ScrollArea className='h-full'>
+              <CardContent className='p-0 flex-1 min-h-0 overflow-hidden'>
+                <ScrollArea className='h-full scrollbar-visible'>
                   {isLoading ? (
                     <div className='flex items-center justify-center py-12'>
                       <Loader2 className='w-6 h-6 animate-spin text-primary' />
@@ -298,10 +432,10 @@ export default function MessagesPage() {
                                   </Badge>
                                 )}
                               </div>
-                              <p className='text-xs text-muted-foreground truncate mb-1'>
+                              <p className='text-xs text-muted-foreground line-clamp-1 mb-1'>
                                 {conv.listingTitle}
                               </p>
-                              <p className='text-xs text-muted-foreground truncate'>
+                              <p className='text-xs text-muted-foreground line-clamp-1'>
                                 {conv.lastMessage}
                               </p>
                             </div>
@@ -315,10 +449,10 @@ export default function MessagesPage() {
             </Card>
 
             {/* Message Thread */}
-            <Card className='lg:col-span-2 flex flex-col min-h-[450px] lg:h-auto'>
+            <Card className='lg:col-span-2 flex flex-col overflow-hidden h-full min-h-[500px] lg:min-h-0'>
               {selectedConv ? (
                 <>
-                  <CardHeader className='border-b'>
+                  <CardHeader className='border-b shrink-0'>
                     <div className='flex items-center gap-3'>
                       <Avatar>
                         <AvatarFallback>
@@ -336,55 +470,60 @@ export default function MessagesPage() {
                     </div>
                   </CardHeader>
 
-                  <CardContent className='flex-1 p-4'>
-                    <ScrollArea className='h-[250px] lg:h-[calc(100vh-600px)] pr-4'>
-                      <div className='space-y-4'>
-                        {selectedConv.messages.map((msg) => {
-                          const isOwn =
-                            msg.senderId ===
-                            (user as any)?.data?.data?.id?.uuid;
-                          return (
-                            <div
-                              key={msg.id}
-                              className={cn(
-                                'flex',
-                                isOwn ? 'justify-end' : 'justify-start',
-                              )}
-                            >
+                  <CardContent className='flex-1 min-h-0 p-0 overflow-hidden'>
+                    <ScrollArea className='h-full p-4 scrollbar-visible'>
+                      {isMessagesLoading && currentMessages.length === 0 ? (
+                        <div className='flex items-center justify-center h-full'>
+                          <Loader2 className='w-6 h-6 animate-spin text-primary' />
+                        </div>
+                      ) : (
+                        <div className='space-y-4'>
+                          {currentMessages.map((msg) => {
+                            const isOwn =
+                              msg.senderId === (user as any)?.data?.data?.id?.uuid;
+                            return (
                               <div
+                                key={msg.id}
                                 className={cn(
-                                  'max-w-[70%] rounded-lg px-4 py-2',
-                                  isOwn
-                                    ? 'bg-primary text-primary-foreground'
-                                    : 'bg-muted',
+                                  'flex',
+                                  isOwn ? 'justify-end' : 'justify-start',
                                 )}
                               >
-                                <p className='text-sm'>{msg.content}</p>
-                                <p
+                                <div
                                   className={cn(
-                                    'text-xs mt-1',
+                                    'max-w-[70%] rounded-lg px-4 py-2',
                                     isOwn
-                                      ? 'text-primary-foreground/70'
-                                      : 'text-muted-foreground',
+                                      ? 'bg-primary text-primary-foreground'
+                                      : 'bg-muted',
                                   )}
                                 >
-                                  {new Date(msg.createdAt).toLocaleTimeString(
-                                    [],
-                                    {
-                                      hour: '2-digit',
-                                      minute: '2-digit',
-                                    },
-                                  )}
-                                </p>
+                                  <p className='text-sm'>{msg.content}</p>
+                                  <p
+                                    className={cn(
+                                      'text-xs mt-1',
+                                      isOwn
+                                        ? 'text-primary-foreground/70'
+                                        : 'text-muted-foreground',
+                                    )}
+                                  >
+                                    {new Date(msg.createdAt).toLocaleTimeString(
+                                      [],
+                                      {
+                                        hour: '2-digit',
+                                        minute: '2-digit',
+                                      },
+                                    )}
+                                  </p>
+                                </div>
                               </div>
-                            </div>
-                          );
-                        })}
-                      </div>
+                            );
+                          })}
+                        </div>
+                      )}
                     </ScrollArea>
                   </CardContent>
 
-                  <div className='border-t p-4'>
+                  <div className='border-t p-4 shrink-0'>
                     <div className='flex gap-2'>
                       <Input
                         placeholder='Type your message...'
